@@ -2,6 +2,9 @@
     RewriteEngine On
     DirectoryIndex index.php
 
+    # Route /api/ requests to index.php
+    RewriteRule ^api/(.*)$ index.php [L,QSA]
+
     # Routing ke index.php jika file/folder tidak langsung ada
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

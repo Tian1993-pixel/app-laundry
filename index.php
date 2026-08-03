@@ -37,6 +37,135 @@ if ($relativeUri === '') {
     $relativeUri = '/';
 }
 
+// =========================================================================
+// PHP MYSQL API ROUTER FOR CPANEL HOSTING
+// =========================================================================
+if (str_starts_with($relativeUri, '/api/')) {
+    header("Content-Type: application/json; charset=UTF-8");
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        exit;
+    }
+
+    $dbHost = 'localhost';
+    $dbUser = 'ruad8174_db_laundry';
+    $dbPass = '';
+    $dbName = 'ruad8174_db_laundry';
+
+    $envPath = __DIR__ . '/backend/.env';
+    if (file_exists($envPath)) {
+        $env = parse_ini_file($envPath);
+        if ($env) {
+            $dbHost = $env['DB_HOST'] ?? $dbHost;
+            $dbUser = $env['DB_USER'] ?? $dbUser;
+            $dbPass = $env['DB_PASS'] ?? $dbPass;
+            $dbName = $env['DB_NAME'] ?? $dbName;
+        }
+    }
+
+    $pdo = null;
+    $possibleDBs = [
+        ['host' => $dbHost, 'user' => $dbUser, 'pass' => $dbPass, 'name' => $dbName],
+        ['host' => 'localhost', 'user' => 'root', 'pass' => '', 'name' => 'db_laundry'],
+        ['host' => 'localhost', 'user' => 'root', 'pass' => 'root', 'name' => 'db_laundry']
+    ];
+
+    foreach ($possibleDBs as $cfg) {
+        try {
+            $pdo = new PDO("mysql:host={$cfg['host']};dbname={$cfg['name']};charset=utf8mb4", $cfg['user'], $cfg['pass'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+            if ($pdo) break;
+        } catch (Exception $e) {}
+    }
+
+    if (!$pdo) {
+        echo json_encode(["success" => false, "message" => "Database connection error"]);
+        exit;
+    }
+
+    $endpoint = substr($relativeUri, strlen('/api/'));
+    $method = $_SERVER['REQUEST_METHOD'];
+
+    // 1. OUTLETS API
+    if ($endpoint === 'outlets' || str_starts_with($endpoint, 'outlets/')) {
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT * FROM outlets WHERE is_active = 1 ORDER BY id ASC");
+            echo json_encode(["success" => true, "data" => $stmt->fetchAll()]);
+            exit;
+        }
+        if ($method === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("INSERT INTO outlets (store_name, address, phone, maps_embed_url) VALUES (?, ?, ?, ?)");
+            $stmt->execute([
+                $input['store_name'] ?? 'Cabang Baru',
+                $input['address'] ?? '-',
+                $input['phone'] ?? '-',
+                $input['maps_embed_url'] ?? null
+            ]);
+            echo json_encode(["success" => true, "message" => "Outlet berhasil ditambahkan", "id" => $pdo->lastInsertId()]);
+            exit;
+        }
+        if ($method === 'PUT') {
+            $parts = explode('/', $endpoint);
+            $id = end($parts);
+            $input = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE outlets SET store_name = ?, address = ?, phone = ?, maps_embed_url = ? WHERE id = ?");
+            $stmt->execute([
+                $input['store_name'] ?? 'Cabang',
+                $input['address'] ?? '-',
+                $input['phone'] ?? '-',
+                $input['maps_embed_url'] ?? null,
+                $id
+            ]);
+            echo json_encode(["success" => true, "message" => "Outlet berhasil diupdate"]);
+            exit;
+        }
+    }
+
+    // 2. STORE SETTINGS API
+    if ($endpoint === 'settings') {
+        if ($method === 'GET') {
+            $stmt = $pdo->query("SELECT * FROM store_settings LIMIT 1");
+            $data = $stmt->fetch();
+            echo json_encode(["success" => true, "data" => $data ?: []]);
+            exit;
+        }
+        if ($method === 'PUT') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE store_settings SET store_name = ?, address = ?, phone = ?, maps_embed_url = COALESCE(?, maps_embed_url) WHERE id = 1");
+            $stmt->execute([
+                $input['store_name'] ?? 'Laundry Fresh & Clean',
+                $input['address'] ?? '',
+                $input['phone'] ?? '',
+                $input['maps_embed_url'] ?? null
+            ]);
+            echo json_encode(["success" => true, "message" => "Settings berhasil diupdate"]);
+            exit;
+        }
+    }
+
+    // 3. GENERIC GET FOR SERVICES, BANK ACCOUNTS, CUSTOMERS, REVIEWS, ORDERS
+    if ($method === 'GET') {
+        $allowedTables = ['services', 'bank_accounts', 'customers', 'reviews', 'orders', 'expenses', 'employees', 'attendances'];
+        $cleanTable = str_replace('-', '_', str_replace('bank-accounts', 'bank_accounts', $endpoint));
+        if (in_array($cleanTable, $allowedTables)) {
+            try {
+                $stmt = $pdo->query("SELECT * FROM `$cleanTable` ORDER BY id DESC");
+                echo json_encode(["success" => true, "data" => $stmt->fetchAll()]);
+                exit;
+            } catch (Exception $e) {}
+        }
+    }
+
+    echo json_encode(["success" => false, "message" => "API endpoint tidak ditemukan"]);
+    exit;
+}
+
 if ($relativeUri !== '' && $relativeUri !== '/' && file_exists($distPath . $relativeUri)) {
     $mime = mime_content_type($distPath . $relativeUri);
     if (str_ends_with($relativeUri, '.js')) $mime = 'application/javascript';

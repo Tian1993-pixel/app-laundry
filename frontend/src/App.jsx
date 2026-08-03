@@ -7,8 +7,8 @@ import { showAlertSuccess, showAlertWarning, showAlertError, showConfirmModal } 
 const getApiBase = () => {
   if (typeof window !== 'undefined' && window.location.hostname) {
     const host = window.location.hostname;
-    if (host !== 'localhost' && !host.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-      return '/api.php';
+    if (host === 'ruangsistem.my.id' || host.endsWith('.my.id')) {
+      return '/api';
     }
     return `http://${host}:5000/api`;
   }

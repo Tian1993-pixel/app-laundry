@@ -1,4 +1,9 @@
 <?php
+// Prevent browser and server caching for fresh updates
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 // Laragon Apache Entry Point for app-laundry
 $distPath = __DIR__ . '/frontend/dist';
 

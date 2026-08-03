@@ -1,22 +1,43 @@
 <?php
-// Laragon Apache VirtualHost Entry Point
+// Laragon Apache Entry Point for app-laundry
 $distPath = __DIR__ . '/frontend/dist';
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-if ($requestUri !== '/' && file_exists($distPath . $requestUri)) {
-    $mime = mime_content_type($distPath . $requestUri);
-    if (str_ends_with($requestUri, '.js')) $mime = 'application/javascript';
-    if (str_ends_with($requestUri, '.css')) $mime = 'text/css';
-    if (str_ends_with($requestUri, '.svg')) $mime = 'image/svg+xml';
+// Remove /frontend/dist or subfolder prefix if present in URL
+if (str_starts_with($requestUri, '/frontend/dist')) {
+    $relativeUri = substr($requestUri, strlen('/frontend/dist'));
+} else {
+    $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+    if ($scriptDir !== '' && str_starts_with($requestUri, $scriptDir)) {
+        $relativeUri = substr($requestUri, strlen($scriptDir));
+    } else {
+        $relativeUri = $requestUri;
+    }
+}
+
+if ($relativeUri === '') {
+    $relativeUri = '/';
+}
+
+if ($relativeUri !== '' && $relativeUri !== '/' && file_exists($distPath . $relativeUri)) {
+    $mime = mime_content_type($distPath . $relativeUri);
+    if (str_ends_with($relativeUri, '.js')) $mime = 'application/javascript';
+    if (str_ends_with($relativeUri, '.css')) $mime = 'text/css';
+    if (str_ends_with($relativeUri, '.svg')) $mime = 'image/svg+xml';
+    if (str_ends_with($relativeUri, '.png')) $mime = 'image/png';
+    if (str_ends_with($relativeUri, '.jpg') || str_ends_with($relativeUri, '.jpeg')) $mime = 'image/jpeg';
     
     header("Content-Type: $mime");
-    readfile($distPath . $requestUri);
+    readfile($distPath . $relativeUri);
     exit;
 }
 
 if (file_exists($distPath . '/index.html')) {
+    header("Content-Type: text/html");
     readfile($distPath . '/index.html');
     exit;
+} else {
+    echo "Dist folder tidak ditemukan. Silakan jalankan 'npm run build' di folder frontend.";
 }
 ?>

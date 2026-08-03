@@ -68,10 +68,10 @@ export default function Navbar({
               className="flex items-center gap-2.5 cursor-pointer group"
             >
               <img 
-                src={storeSettings.logo_url || '/images/laundry_logo.png'} 
+                src={storeSettings.logo_url && storeSettings.logo_url.startsWith('/images/') ? storeSettings.logo_url.slice(1) : (storeSettings.logo_url || 'images/laundry_logo.png')} 
                 alt="Logo Toko" 
                 className="w-10 h-10 rounded-xl object-cover border-2 border-amber-400/80 shadow transform group-hover:scale-105 transition"
-                onError={(e) => { e.target.onerror = null; e.target.src = '/images/laundry_logo.png'; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_logo.png'; }}
               />
               <div>
                 <h1 className="font-black text-sm sm:text-base leading-none text-white tracking-tight">{storeSettings.store_name}</h1>
@@ -184,10 +184,10 @@ export default function Navbar({
               <div className="flex items-center justify-between pb-4 border-b border-teal-800">
                 <div className="flex items-center gap-2">
                   <img 
-                    src={storeSettings.logo_url || '/images/laundry_logo.png'} 
+                    src={storeSettings.logo_url && storeSettings.logo_url.startsWith('/images/') ? storeSettings.logo_url.slice(1) : (storeSettings.logo_url || 'images/laundry_logo.png')} 
                     alt="Logo Toko" 
                     className="w-10 h-10 rounded-xl object-cover border border-amber-400"
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/images/laundry_logo.png'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_logo.png'; }}
                   />
                   <div>
                     <h2 className="font-extrabold text-sm text-white">{storeSettings.store_name}</h2>

@@ -17,7 +17,8 @@ import {
   Search,
   Hash
 } from 'lucide-react';
-import { showAlertSuccess, showAlertWarning, showAlertError } from '../utils/swalAlert';
+import { showAlertSuccess, showAlertWarning, showAlertError, showConfirmModal } from '../utils/swalAlert';
+import { API_BASE } from '../utils/apiConfig';
 
 export default function ManagementView({ 
   customers = [], 
@@ -83,7 +84,7 @@ export default function ManagementView({
 
     setCustomers([created, ...customers]);
 
-    fetch('http://localhost:5000/api/customers', {
+    fetch(`${API_BASE}/customers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(created)
@@ -101,7 +102,7 @@ export default function ManagementView({
 
     setCustomers(customers.map(c => c.id === showTopupDeposit.id ? { ...c, deposit_balance: c.deposit_balance + amt } : c));
 
-    fetch(`http://${window.location.hostname}:5000/api/customers/${showTopupDeposit.id}/deposit`, {
+    fetch(`${API_BASE}/customers/${showTopupDeposit.id}/deposit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: amt })
@@ -126,7 +127,7 @@ export default function ManagementView({
 
     setEmployees([...employees, created]);
 
-    fetch(`http://${window.location.hostname}:5000/api/employees`, {
+    fetch(`${API_BASE}/employees`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(created)
@@ -163,7 +164,7 @@ export default function ManagementView({
 
     setAttendances([newAtt, ...attendances.filter(a => !(a.employee_id === emp.id && a.date === todayStr))]);
 
-    fetch(`http://${window.location.hostname}:5000/api/attendances/clock-in`, {
+    fetch(`${API_BASE}/attendances/clock-in`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employee_id: emp.id, employee_name: emp.name, role: emp.role, date: todayStr, time: timeNow })
@@ -186,7 +187,7 @@ export default function ManagementView({
     const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     setAttendances(attendances.map(a => a.id === existing.id ? { ...a, clock_out: timeNow } : a));
 
-    fetch(`http://${window.location.hostname}:5000/api/attendances/clock-out`, {
+    fetch(`${API_BASE}/attendances/clock-out`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employee_id: emp.id, date: todayStr, time: timeNow })

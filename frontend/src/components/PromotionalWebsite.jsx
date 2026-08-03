@@ -190,8 +190,14 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
     }
   };
 
-  const bannerImgSrc = storeSettings.banner_url || '/images/laundry_hero_banner.png';
-  const logoImgSrc = storeSettings.logo_url || '/images/laundry_logo.png';
+  const formatRelativeImg = (url, fallback) => {
+    if (!url) return fallback;
+    if (url.startsWith('/images/')) return url.slice(1);
+    return url;
+  };
+
+  const bannerImgSrc = formatRelativeImg(storeSettings.banner_url, 'images/laundry_hero_banner.png');
+  const logoImgSrc = formatRelativeImg(storeSettings.logo_url, 'images/laundry_logo.png');
 
   return (
     <div className="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col justify-between relative">
@@ -218,7 +224,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
                   src={bannerImgSrc} 
                   alt="Banner Laundry Hero" 
                   className="w-full h-full object-cover opacity-50 scale-105"
-                  onError={(e) => { e.target.src = '/images/laundry_hero_banner.png'; }}
+                  onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_hero_banner.png'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-teal-950/80 via-teal-950/70 to-teal-950"></div>
               </div>
@@ -229,7 +235,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
                     src={logoImgSrc} 
                     alt="Logo Toko" 
                     className="w-6 h-6 rounded-full object-cover border border-amber-400 shrink-0"
-                    onError={(e) => { e.target.src = '/images/laundry_logo.png'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_logo.png'; }}
                   />
                   <span className="font-extrabold">{storeSettings.store_name} - Clean & Fresh</span>
                 </div>
@@ -282,7 +288,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
                     src={bannerImgSrc} 
                     alt="Spanduk Banner Depan Website" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    onError={(e) => { e.target.src = '/images/laundry_hero_banner.png'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_hero_banner.png'; }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent p-4 md:p-6 flex flex-col justify-end text-white">
                     <span className="bg-amber-400 text-teal-950 text-[10px] font-black px-3 py-1 rounded-full uppercase w-max mb-1">
@@ -1066,6 +1072,87 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
         </a>
       </div>
 
+      {/* ========================================================================= */}
+      {/* SECTION LOKASI & PETA GOOGLE MAPS OUTLET */}
+      {/* ========================================================================= */}
+      <section className="bg-slate-900 text-white py-14 px-4 border-t border-slate-800">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <span className="bg-teal-900/80 text-teal-300 font-extrabold text-xs px-3.5 py-1.5 rounded-full border border-teal-700 uppercase tracking-widest inline-flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-teal-400" /> Lokasi & Peta Outlet
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Kunjungi & Temukan Outlet Terdekat Kami</h2>
+            <p className="text-xs text-slate-400 max-w-xl mx-auto">
+              Lokasi strategis, mudah dijangkau, dan siap melayani kebutuhan laundry pakaian Anda setiap hari.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Outlets Info Box (Lg: 4) */}
+            <div className="lg:col-span-4 bg-slate-800/90 p-6 rounded-3xl border border-slate-700 space-y-6 flex flex-col justify-between">
+              <div className="space-y-4">
+                <h3 className="font-extrabold text-amber-300 text-base flex items-center gap-2 border-b border-slate-700 pb-3">
+                  <Building2 className="w-5 h-5 text-amber-400" /> {storeSettings.store_name}
+                </h3>
+                <div className="space-y-3 text-xs text-slate-300">
+                  <div className="flex items-start gap-2.5">
+                    <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-white mb-0.5">Alamat Utama Toko:</p>
+                      <p className="text-slate-300">{storeSettings.address || 'Jl. Raya Utama No. 12, Bandung'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div>
+                      <p className="font-bold text-white">Hotline WhatsApp CS:</p>
+                      <p className="text-slate-300">{storeSettings.phone || '081234567890'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <div>
+                      <p className="font-bold text-white">Jam Buka Laundry:</p>
+                      <p className="text-slate-300">Senin - Minggu: 07.00 - 21.00 WIB</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-slate-700">
+                <a 
+                  href={`https://maps.google.com/?q=${encodeURIComponent(storeSettings.address || storeSettings.store_name)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <MapPin className="w-4 h-4" /> Buka Di Google Maps App
+                </a>
+              </div>
+            </div>
+
+            {/* Google Maps Interactive iFrame (Lg: 8) */}
+            <div className="lg:col-span-8 bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl h-80 lg:h-auto min-h-[320px] relative">
+              <iframe 
+                title="Google Maps Lokasi Laundry"
+                src={
+                  storeSettings.maps_embed_url && storeSettings.maps_embed_url.includes('google.com/maps')
+                    ? (storeSettings.maps_embed_url.includes('<iframe') 
+                        ? storeSettings.maps_embed_url.match(/src="([^"]+)"/)?.[1] || storeSettings.maps_embed_url 
+                        : storeSettings.maps_embed_url)
+                    : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.898863678077!2d107.608316!3d-6.902677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTQnMDkuNiJTIDEwN8KwMzYnMjkuOSJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid'
+                } 
+                className="w-full h-full border-0" 
+                allowFullScreen="" 
+                loading="lazy" 
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* GLOBAL FOOTER WITH SOCIAL MEDIA FOLLOW (USER REQUEST - LINK MENU DIHILANGKAN) */}
       <footer className="bg-slate-900 text-slate-400 text-xs py-10 px-4 border-t border-slate-800 mt-auto">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
@@ -1076,7 +1163,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
               src={logoImgSrc} 
               alt="Logo Toko" 
               className="w-10 h-10 rounded-xl object-cover border border-amber-400"
-              onError={(e) => { e.target.src = '/images/laundry_logo.png'; }}
+              onError={(e) => { e.target.onerror = null; e.target.src = 'images/laundry_logo.png'; }}
             />
             <div>
               <p className="font-extrabold text-white text-base">{storeSettings.store_name}</p>

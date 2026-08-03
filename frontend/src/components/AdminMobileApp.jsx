@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import html2canvas from 'html2canvas';
 import ReportsView from './ReportsView';
 import ManagementView from './ManagementView';
 import OutletSettingsView from './OutletSettingsView';
 import { showAlertSuccess, showAlertWarning, showAlertError, showConfirmModal } from '../utils/swalAlert';
+import { API_BASE } from '../utils/apiConfig';
 
 import { 
   ShoppingBag, 
@@ -27,6 +29,8 @@ import {
   Gift,
   Star,
   Tag,
+  Download,
+  Share2,
   Percent,
   Sparkles,
   Truck,
@@ -221,7 +225,7 @@ export default function AdminMobileApp({
     setOrders([newOrder, ...orders]);
 
     // Save to MySQL DB
-    fetch(`http://${window.location.hostname}:5000/api/orders`, {
+    fetch(`${API_BASE}/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newOrder)
@@ -247,7 +251,7 @@ export default function AdminMobileApp({
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, work_status: newStatus } : o));
 
-    fetch(`http://${window.location.hostname}:5000/api/orders/${orderId}/status`, {
+    fetch(`${API_BASE}/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ work_status: newStatus })
@@ -544,6 +548,16 @@ export default function AdminMobileApp({
                     </div>
                   </div>
 
+                  {/* Action Buttons: Cetak Struk */}
+                  <div className="pt-1 flex justify-end">
+                    <button 
+                      onClick={() => setActiveReceipt(ord)}
+                      className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1"
+                    >
+                      <Printer className="w-3.5 h-3.5" /> Cetak Struk Nota
+                    </button>
+                  </div>
+
                 </div>
               ))}
             </div>
@@ -557,6 +571,9 @@ export default function AdminMobileApp({
             orders={orders}
             expenses={expenses}
             setExpenses={setExpenses}
+            storeSettings={storeSettings}
+            receiptFontSize={receiptFontSize}
+            setActiveReceipt={setActiveReceipt}
           />
         )}
 
@@ -728,84 +745,253 @@ export default function AdminMobileApp({
       {/* Printable Receipt Modal */}
       {activeReceipt && (
         <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 font-sans">
-          <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
-            <div id="printable-receipt" className={`font-mono text-slate-800 space-y-2 bg-slate-50 p-4 border rounded-xl ${
-              receiptFontSize === '58mm' ? 'text-[10px]' : (receiptFontSize === 'large' ? 'text-sm' : 'text-xs')
-            }`}>
-              <div className="text-center border-b pb-2">
-                <h2 className="font-bold text-base uppercase">{storeSettings.store_name}</h2>
-                <p className="text-[10px]">{storeSettings.address}</p>
-                <p className="text-[10px]">Telp: {storeSettings.phone}</p>
+          <div className="bg-white p-5 rounded-2xl max-w-sm w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div 
+              id="printable-receipt" 
+              style={{
+                fontFamily: "'Courier New', Courier, monospace",
+                fontSize: receiptFontSize === '58mm' ? '9px' : receiptFontSize === 'large' ? '12px' : '10px',
+                lineHeight: receiptFontSize === '58mm' ? '1.3' : receiptFontSize === 'large' ? '1.5' : '1.4',
+                color: '#1e293b',
+                backgroundColor: '#f8fafc',
+                padding: '16px 12px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px'
+              }}
+            >
+              {/* Header Block: Logo Left (Prominent & Large) + Store Info Right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: receiptFontSize === '58mm' ? '10px' : receiptFontSize === 'large' ? '14px' : '12px', marginBottom: '10px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
+                {/* Logo on Left (Larger & Prominent) */}
+                <div style={{ flexShrink: 0 }}>
+                  {storeSettings.logo_url ? (
+                    <img 
+                      src={storeSettings.logo_url} 
+                      alt="Logo" 
+                      style={{ 
+                        width: receiptFontSize === '58mm' ? '60px' : receiptFontSize === 'large' ? '90px' : '75px', 
+                        height: receiptFontSize === '58mm' ? '60px' : receiptFontSize === 'large' ? '90px' : '75px', 
+                        objectFit: 'contain', 
+                        borderRadius: '8px',
+                        display: 'block'
+                      }} 
+                      onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      width: receiptFontSize === '58mm' ? '60px' : receiptFontSize === 'large' ? '90px' : '75px', 
+                      height: receiptFontSize === '58mm' ? '60px' : receiptFontSize === 'large' ? '90px' : '75px', 
+                      backgroundColor: '#f1f5f9', 
+                      borderRadius: '8px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontSize: receiptFontSize === '58mm' ? '24px' : receiptFontSize === 'large' ? '36px' : '30px'
+                    }}>🧺</div>
+                  )}
+                </div>
+
+                {/* Store Info on Right (Balanced & Clear Rata Kiri) */}
+                <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: receiptFontSize === '58mm' ? '11px' : receiptFontSize === 'large' ? '16px' : '14px', lineHeight: '1.25', marginBottom: '3px', wordBreak: 'break-word', color: '#0f172a' }}>
+                    {storeSettings.store_name || 'Nama Toko'}
+                  </div>
+                  <div style={{ fontSize: receiptFontSize === '58mm' ? '8px' : receiptFontSize === 'large' ? '11px' : '9.5px', color: '#475569', lineHeight: '1.3', marginBottom: '2px', wordBreak: 'break-word' }}>
+                    {storeSettings.address || ''}
+                  </div>
+                  <div style={{ fontSize: receiptFontSize === '58mm' ? '8px' : receiptFontSize === 'large' ? '11px' : '9.5px', color: '#475569', lineHeight: '1.3' }}>
+                    Telp: {storeSettings.phone || ''}
+                  </div>
+                </div>
               </div>
 
-              <div className="border-b pb-2">
-                <p>Nota: {activeReceipt.invoice_number}</p>
-                <p>Tgl : {activeReceipt.created_at}</p>
-                <p>Pel : {activeReceipt.customer_name}</p>
-                <p>Rak : {activeReceipt.rack_location}</p>
+              {/* Header Note */}
+              <div style={{ textAlign: 'center', fontWeight: 'bold', borderTop: '1px dashed #94a3b8', borderBottom: '1px dashed #94a3b8', padding: '4px 0', margin: '4px 0', fontSize: receiptFontSize === '58mm' ? '8px' : receiptFontSize === 'large' ? '11px' : '9px' }}>
+                {storeSettings.header_receipt_note || 'Nota Resmi Pembayaran Laundry'}
               </div>
 
-              <div className="border-b pb-2 space-y-1">
-                {activeReceipt.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span>{it.service_name} ({it.qty} {it.unit || 'kg'})</span>
-                    <span>Rp {it.subtotal.toLocaleString('id-ID')}</span>
+              {/* Invoice Info */}
+              <div style={{ margin: '6px 0', lineHeight: '1.6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>No. Invoice</span>
+                  <span style={{ fontWeight: 'bold' }}>{activeReceipt.invoice_number}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Tanggal</span>
+                  <span>{activeReceipt.created_at}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Pelanggan</span>
+                  <span>{activeReceipt.customer_name}</span>
+                </div>
+                {activeReceipt.perfume_variant && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Parfum</span>
+                    <span>{activeReceipt.perfume_variant}</span>
+                  </div>
+                )}
+                {activeReceipt.rack_location && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Rak</span>
+                    <span>{activeReceipt.rack_location}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Separator */}
+              <div style={{ borderTop: '1px dashed #94a3b8', margin: '4px 0' }}></div>
+
+              {/* Items */}
+              <div style={{ margin: '4px 0' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '3px' }}>Detail Pesanan:</div>
+                {activeReceipt.items && activeReceipt.items.map((it, idx) => (
+                  <div key={idx}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{it.service_name}</span>
+                      <span></span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
+                      <span>&nbsp;&nbsp;{it.qty} {it.unit || 'kg'} x Rp {(it.price_per_unit || 0).toLocaleString('id-ID')}</span>
+                      <span>Rp {(it.subtotal || 0).toLocaleString('id-ID')}</span>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div className="border-b pb-2 space-y-1">
-                <div className="flex justify-between">
-                  <span>SUBTOTAL:</span>
-                  <span>Rp {(activeReceipt.subtotal_amount || activeReceipt.total_amount).toLocaleString('id-ID')}</span>
+              {/* Separator */}
+              <div style={{ borderTop: '1px dashed #94a3b8', margin: '4px 0' }}></div>
+
+              {/* Totals */}
+              <div style={{ margin: '4px 0', lineHeight: '1.6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Subtotal</span>
+                  <span>Rp {((activeReceipt.subtotal_amount || activeReceipt.total_amount) || 0).toLocaleString('id-ID')}</span>
                 </div>
                 {activeReceipt.discount_amount > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-bold">
-                    <span>DISKON:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626' }}>
+                    <span>Diskon</span>
                     <span>- Rp {activeReceipt.discount_amount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
                 {activeReceipt.shipping_fee > 0 && (
-                  <div className="flex justify-between text-slate-700">
-                    <span>BIAYA ONGKIR:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Ongkir</span>
                     <span>+ Rp {activeReceipt.shipping_fee.toLocaleString('id-ID')}</span>
                   </div>
                 )}
                 {activeReceipt.other_fee > 0 && (
-                  <div className="flex justify-between text-slate-700">
-                    <span>BIAYA LAIN:</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Biaya Lain</span>
                     <span>+ Rp {activeReceipt.other_fee.toLocaleString('id-ID')}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-sm pt-1 border-t">
-                  <span>TOTAL AKHIR:</span>
-                  <span>Rp {activeReceipt.total_amount.toLocaleString('id-ID')}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: receiptFontSize === '58mm' ? '10px' : receiptFontSize === 'large' ? '14px' : '12px', borderTop: '1px solid #334155', paddingTop: '3px', marginTop: '3px' }}>
+                  <span>TOTAL</span>
+                  <span>Rp {(activeReceipt.total_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
-                <div className="flex justify-between pt-1">
-                  <span>BAYAR ({activeReceipt.payment_type.toUpperCase()}):</span>
-                  <span>Rp {activeReceipt.paid_amount.toLocaleString('id-ID')}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Bayar ({(activeReceipt.payment_type || 'cash').toUpperCase()})</span>
+                  <span>Rp {(activeReceipt.paid_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
+                {activeReceipt.change_amount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Kembali</span>
+                    <span>Rp {activeReceipt.change_amount.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="text-center pt-2 text-[10px]">
-                <p className="font-bold">{storeSettings.header_receipt_note}</p>
-                <p className="mt-1">{storeSettings.footer_receipt_note}</p>
+              {/* Status */}
+              <div style={{ textAlign: 'center', margin: '6px 0', fontWeight: 'bold', padding: '3px', border: `1px solid ${activeReceipt.payment_status === 'paid' ? '#0f766e' : '#d97706'}`, borderRadius: '4px', color: activeReceipt.payment_status === 'paid' ? '#0f766e' : '#d97706' }}>
+                {activeReceipt.payment_status === 'paid' ? '✅ LUNAS' : '⏳ BELUM BAYAR'}
+              </div>
+
+              {/* Footer Note */}
+              <div style={{ borderTop: '1px dashed #94a3b8', paddingTop: '6px', marginTop: '6px', textAlign: 'center', fontSize: receiptFontSize === '58mm' ? '7px' : receiptFontSize === 'large' ? '10px' : '8px', color: '#475569', fontStyle: 'italic' }}>
+                {storeSettings.footer_receipt_note || 'Terima kasih telah mempercayakan pakaian Anda kepada kami!'}
+              </div>
+
+              {/* Powered By */}
+              <div style={{ textAlign: 'center', fontSize: '7px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px dashed #cbd5e1' }}>
+                Powered by App Laundry System
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <button 
-                onClick={() => window.print()}
-                className="flex-1 bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
-              >
-                <Printer className="w-4 h-4" /> Cetak Thermal
-              </button>
-              <button 
-                onClick={() => setActiveReceipt(null)}
-                className="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs"
-              >
-                Tutup
-              </button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => window.print()}
+                  className="flex-1 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
+                >
+                  <Printer className="w-4 h-4" /> Cetak Thermal
+                </button>
+                <button 
+                  onClick={async () => {
+                    const receiptElem = document.getElementById('printable-receipt');
+                    if (!receiptElem) return;
+                    try {
+                      const canvas = await html2canvas(receiptElem, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+                      const image = canvas.toDataURL('image/png');
+                      const link = document.createElement('a');
+                      link.href = image;
+                      link.download = `Struk-${activeReceipt.invoice_number || 'Laundry'}.png`;
+                      link.click();
+                      showAlertSuccess('Struk Terunduh (PNG)', 'Gambar struk resmi berhasil diunduh ke memori perangkat!');
+                    } catch (err) {
+                      console.error('Download error:', err);
+                      showAlertError('Gagal Unduh Gambar', 'Tidak dapat memproses gambar struk.');
+                    }
+                  }}
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
+                >
+                  <Download className="w-4 h-4" /> Unduh Gambar (PNG)
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={async () => {
+                    if (!activeReceipt) return;
+                    const receiptElem = document.getElementById('printable-receipt');
+                    if (receiptElem) {
+                      try {
+                        const canvas = await html2canvas(receiptElem, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+                        const image = canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.href = image;
+                        link.download = `Struk-${activeReceipt.invoice_number || 'Laundry'}.png`;
+                        link.click();
+                      } catch (e) {}
+                    }
+
+                    let phone = (activeReceipt.customer_phone || '').replace(/\D/g, '');
+                    if (phone.startsWith('0')) phone = '62' + phone.slice(1);
+
+                    const waText = encodeURIComponent(
+                      `Halo *${activeReceipt.customer_name}*, terima kasih telah mempercayakan pakaian Anda di *${storeSettings.store_name}*! 🙏\n\n` +
+                      `📌 *NO INVOICE:* ${activeReceipt.invoice_number}\n` +
+                      `📅 *TANGGAL:* ${activeReceipt.created_at}\n` +
+                      `💰 *TOTAL AKHIR:* Rp ${(activeReceipt.total_amount || 0).toLocaleString('id-ID')}\n` +
+                      `🏷️ *STATUS:* ${(activeReceipt.payment_status === 'paid' ? '✅ LUNAS' : '⏳ BELUM BAYAR')}\n\n` +
+                      `📸 *FOTO STRUK RESMI TERUNDUH:* File gambar nota struk resmi sudah otomatis terunduh. Cukup *Paste (Ctrl+V)* atau *Lampirkan Gambar* di chat ini!`
+                    );
+
+                    if (phone) {
+                      window.open(`https://wa.me/${phone}?text=${waText}`, '_blank');
+                    } else {
+                      window.open(`https://wa.me/?text=${waText}`, '_blank');
+                    }
+                  }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
+                >
+                  <Share2 className="w-4 h-4" /> 💬 Forward Struk (Gambar) Ke WA Member
+                </button>
+                <button 
+                  onClick={() => setActiveReceipt(null)}
+                  className="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         </div>

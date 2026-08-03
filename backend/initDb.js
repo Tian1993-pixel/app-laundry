@@ -52,17 +52,21 @@ async function initDatabase() {
       ) ENGINE=InnoDB;
     `);
 
+    try { await pool.query(`ALTER TABLE store_settings ADD COLUMN logo_url LONGTEXT;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE store_settings ADD COLUMN banner_url LONGTEXT;`); } catch (e) {}
     try { await pool.query(`ALTER TABLE store_settings MODIFY COLUMN logo_url LONGTEXT;`); } catch (e) {}
     try { await pool.query(`ALTER TABLE store_settings MODIFY COLUMN banner_url LONGTEXT;`); } catch (e) {}
     try { await pool.query(`ALTER TABLE store_settings ADD COLUMN first_member_discount INT DEFAULT 10000;`); } catch (e) {}
     try { await pool.query(`ALTER TABLE store_settings ADD COLUMN point_redeem_threshold INT DEFAULT 10;`); } catch (e) {}
     try { await pool.query(`ALTER TABLE store_settings ADD COLUMN point_redeem_discount INT DEFAULT 10000;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE store_settings ADD COLUMN maps_embed_url TEXT;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE outlets ADD COLUMN maps_embed_url TEXT;`); } catch (e) {}
 
     const [settingsRows] = await pool.query('SELECT COUNT(*) as count FROM store_settings');
     if (settingsRows[0].count === 0) {
       await pool.query(`
-        INSERT INTO store_settings (id, store_name, tagline, address, phone, logo_url, banner_url) 
-        VALUES (1, 'Laundry Fresh & Clean', 'Solusi Pakaian Bersih, Rapi & Harum Premium', 'Jl. Raya Utama No. 12, Bandung', '081234567890', '/images/laundry_logo.png', '/images/laundry_hero_banner.png');
+        INSERT INTO store_settings (id, store_name, tagline, address, phone, logo_url, banner_url, maps_embed_url) 
+        VALUES (1, 'Laundry Fresh & Clean', 'Solusi Pakaian Bersih, Rapi & Harum Premium', 'Jl. Raya Utama No. 12, Bandung', '081234567890', '/images/laundry_logo.png', '/images/laundry_hero_banner.png', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.898863678077!2d107.608316!3d-6.902677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTQnMDkuNiJTIDEwN8KwMzYnMjkuOSJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid');
       `);
     }
 
@@ -73,6 +77,7 @@ async function initDatabase() {
         store_name VARCHAR(150) NOT NULL,
         address TEXT,
         phone VARCHAR(30),
+        maps_embed_url TEXT,
         is_active TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB;
@@ -106,6 +111,29 @@ async function initDatabase() {
         (1, 'Hendra Wijaya', 5, 'Paket Express Kilat', 'Cucian sangat wangi dan bersih. Penjemputannya tepat waktu dan harga terjangkau! Sangat direkomendasikan.'),
         (2, 'Anisa Rahmawati', 5, 'Paket Satuan Bed Cover', 'Bedcover jumbo saya kembali seperti baru, sangat lembut dan packing plastiknya rapi banget.'),
         (3, 'Bambang Kusuma', 5, 'Paket Kiloan Reguler', 'Sudah langganan 6 bulan di sini. Poin reward-nya lumayan banget bisa ditukar diskon!');
+      `);
+    }
+
+    // 4. Tabel bank_accounts
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bank_accounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        bank_name VARCHAR(100) NOT NULL,
+        account_number VARCHAR(100) NOT NULL,
+        account_holder VARCHAR(150),
+        qr_code_url LONGTEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB;
+    `);
+
+    try { await pool.query(`ALTER TABLE bank_accounts ADD COLUMN qr_code_url LONGTEXT;`); } catch (e) {}
+
+    const [bankCount] = await pool.query('SELECT COUNT(*) as count FROM bank_accounts');
+    if (bankCount[0].count === 0) {
+      await pool.query(`
+        INSERT INTO bank_accounts (id, bank_name, account_number, account_holder) VALUES 
+        (1, 'BCA', '7788990011', 'Outlet Utama'),
+        (2, 'QRIS ShopeePay', '081234567890', 'Outlet Utama');
       `);
     }
 

@@ -3,44 +3,47 @@ import Navbar from './components/Navbar';
 import PromotionalWebsite from './components/PromotionalWebsite';
 import AdminMobileApp from './components/AdminMobileApp';
 import { showAlertSuccess, showAlertWarning, showAlertError, showConfirmModal } from './utils/swalAlert';
+import { API_BASE } from './utils/apiConfig';
 
-const getApiBase = () => {
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    const host = window.location.hostname;
-    if (host === 'ruangsistem.my.id' || host.endsWith('.my.id')) {
-      return '/api';
+const getStoredSettings = () => {
+  try {
+    const saved = localStorage.getItem('app_store_settings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && parsed.store_name) return parsed;
     }
-    return 'http://localhost:5000/api';
-  }
-  return 'http://localhost:5000/api';
+  } catch (e) {}
+  return {
+    store_name: 'Laundry Fresh & Clean',
+    tagline: 'Solusi Pakaian Bersih, Rapi & Harum Premium',
+    address: 'Jl. Raya Utama No. 12, Bandung',
+    phone: '081234567890',
+    logo_url: 'images/laundry_logo.png',
+    banner_url: 'images/laundry_hero_banner.png',
+    header_receipt_note: 'Nota Resmi Pembayaran Laundry',
+    footer_receipt_note: 'Terima kasih telah mempercayakan pakaian Anda kepada kami!',
+    license_key: 'LND-2026-PREMIUM-OK',
+    license_active_until: '2026-12-31',
+    is_active: true,
+    first_member_discount: 10000,
+    point_redeem_threshold: 10,
+    point_redeem_discount: 10000
+  };
 };
 
-const API_BASE = getApiBase();
-
-const DEFAULT_SETTINGS = {
-  store_name: 'Laundry Fresh & Clean',
-  tagline: 'Solusi Pakaian Bersih, Rapi & Harum Premium',
-  address: 'Jl. Raya Utama No. 12, Bandung',
-  phone: '081234567890',
-  logo_url: '/images/laundry_logo.png',
-  banner_url: '/images/laundry_hero_banner.png',
-  header_receipt_note: 'Nota Resmi Pembayaran Laundry',
-  footer_receipt_note: 'Terima kasih telah mempercayakan pakaian Anda kepada kami!',
-  license_key: 'LND-2026-PREMIUM-OK',
-  license_active_until: '2026-12-31',
-  is_active: true,
-  first_member_discount: 10000,
-  point_redeem_threshold: 10,
-  point_redeem_discount: 10000
+const getStoredOutlets = () => {
+  try {
+    const saved = localStorage.getItem('app_outlets');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return [];
 };
-
-const INITIAL_OUTLETS = [
-  { id: 1, store_name: 'Laundry Fresh & Clean (Pusat)', address: 'Jl. Raya Utama No. 12, Bandung', phone: '081234567890' },
-  { id: 2, store_name: 'Laundry Fresh & Clean (Cabang Dago)', address: 'Jl. Ir. H. Juanda No. 88, Bandung', phone: '081299881122' },
-];
 
 const INITIAL_BANK_ACCOUNTS = [
-  { id: 1, bank_name: 'BCA', account_number: '7788990011', account_holder: 'Laundry Fresh & Clean' },
+  { id: 1, bank_name: 'BCA', account_number: '7788990011', account_holder: 'Outlet Utama' },
   { id: 2, bank_name: 'QRIS ShopeePay', account_number: '081234567890', account_holder: 'Outlet Utama' },
 ];
 
@@ -123,9 +126,22 @@ export default function App() {
   const [activeMode, setActiveMode] = useState('promotional'); // 'promotional' | 'admin'
   const [websiteTab, setWebsiteTab] = useState('home');
 
-  const [storeSettings, setStoreSettings] = useState(DEFAULT_SETTINGS);
-  const [outlets, setOutlets] = useState(INITIAL_OUTLETS);
-  const [activeOutletId, setActiveOutletId] = useState(1);
+  const [storeSettings, setStoreSettings] = useState(getStoredSettings);
+  const [outlets, setOutlets] = useState(getStoredOutlets);
+  const [activeOutletId, setActiveOutletId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('activeOutletId');
+      return saved ? Number(saved) : 1;
+    } catch (e) {
+      return 1;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('activeOutletId', activeOutletId);
+    } catch (e) {}
+  }, [activeOutletId]);
 
   const [bankAccounts, setBankAccounts] = useState(INITIAL_BANK_ACCOUNTS);
   const [receiptFontSize, setReceiptFontSize] = useState('80mm');
@@ -154,13 +170,47 @@ export default function App() {
     }
   }, [customers]);
 
+  // Sync active outlet details (store_name, address, phone) with storeSettings
+  useEffect(() => {
+    if (outlets && outlets.length > 0) {
+      const activeOutlet = outlets.find(o => o.id === Number(activeOutletId)) || outlets[0];
+      if (activeOutlet) {
+        setStoreSettings(prev => {
+          const updated = {
+            ...prev,
+            store_name: activeOutlet.store_name,
+            address: activeOutlet.address || prev.address,
+            phone: activeOutlet.phone || prev.phone
+          };
+          try { localStorage.setItem('app_store_settings', JSON.stringify(updated)); } catch (e) {}
+          return updated;
+        });
+      }
+    }
+  }, [outlets, activeOutletId]);
+
   // INITIAL DATA FETCHING FROM MYSQL DB_LAUNDRY
   useEffect(() => {
     fetch(`${API_BASE}/settings`)
       .then(res => res.json())
       .then(data => {
         if (data && data.success && data.data) {
-          setStoreSettings(prev => ({ ...prev, ...data.data }));
+          const sanitized = { ...data.data };
+          if (sanitized.logo_url && sanitized.logo_url.startsWith('/images/')) {
+            sanitized.logo_url = sanitized.logo_url.slice(1);
+          }
+          if (sanitized.banner_url && sanitized.banner_url.startsWith('/images/')) {
+            sanitized.banner_url = sanitized.banner_url.slice(1);
+          }
+          if (!sanitized.store_name) delete sanitized.store_name;
+          if (!sanitized.address) delete sanitized.address;
+          if (!sanitized.phone) delete sanitized.phone;
+
+          setStoreSettings(prev => {
+            const merged = { ...prev, ...sanitized };
+            try { localStorage.setItem('app_store_settings', JSON.stringify(merged)); } catch (e) {}
+            return merged;
+          });
         }
       })
       .catch(() => console.log('DB Connect: Menggunakan fallback settings'));
@@ -228,15 +278,6 @@ export default function App() {
       })
       .catch(() => console.log('DB Connect: Menggunakan fallback attendances'));
 
-    fetch(`${API_BASE}/outlets`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.success && data.data && data.data.length > 0) {
-          setOutlets(data.data);
-        }
-      })
-      .catch(() => console.log('DB Connect: Menggunakan fallback outlets'));
-
     fetch(`${API_BASE}/bank-accounts`)
       .then(res => res.json())
       .then(data => {
@@ -245,6 +286,16 @@ export default function App() {
         }
       })
       .catch(() => console.log('DB Connect: Menggunakan fallback bank accounts'));
+
+    fetch(`${API_BASE}/outlets`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data && data.data.length > 0) {
+          setOutlets(data.data);
+          try { localStorage.setItem('app_outlets', JSON.stringify(data.data)); } catch (e) {}
+        }
+      })
+      .catch(() => console.log('DB Connect: Menggunakan fallback outlets'));
   }, []);
 
   const handleAddReview = (newReviewData) => {

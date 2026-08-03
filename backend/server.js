@@ -7,7 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MySQL Pool Connection
 const pool = mysql.createPool({
@@ -17,6 +18,19 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'db_laundry',
   waitForConnections: true,
   connectionLimit: 10
+});
+
+app.get('/', (req, res) => {
+  res.send(`
+    <div style="font-family: system-ui, sans-serif; text-align: center; padding: 50px;">
+      <h2>🚀 Backend API App Laundry Berhasil Berjalan!</h2>
+      <p>Port 5000 ini khusus layanan REST API data (JSON).</p>
+      <p>Untuk membuka tampilan aplikasi/website utama, silakan klik link di bawah:</p>
+      <a href="http://app-laundry.test" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Buka http://app-laundry.test</a>
+      <br/><br/>
+      <a href="http://localhost/app-laundry" style="color: #4b5563;">Atau buka http://localhost/app-laundry</a>
+    </div>
+  `);
 });
 
 // =========================================================================
@@ -36,27 +50,52 @@ app.get('/api/settings', async (req, res) => {
 
 app.put('/api/settings', async (req, res) => {
   const { 
-    store_name, tagline, address, phone, logo_url, banner_url,
+    store_name, tagline, address, phone, logo_url, banner_url, maps_embed_url,
     header_receipt_note, footer_receipt_note, 
     first_member_discount, point_redeem_threshold, point_redeem_discount 
   } = req.body;
+
+  const sName = store_name || 'Laundry Fresh & Clean';
+  const sTagline = tagline || 'Solusi Pakaian Bersih, Rapi & Harum Premium';
+  const sAddress = address || 'Jl. Raya Utama No. 12, Bandung';
+  const sPhone = phone || '081234567890';
+  const sHeaderNote = header_receipt_note || 'Nota Resmi Pembayaran Laundry';
+  const sFooterNote = footer_receipt_note || 'Terima kasih telah mempercayakan pakaian Anda kepada kami!';
+
   try {
-    await pool.query(
+    const [result] = await pool.query(
       `UPDATE store_settings SET 
         store_name = ?, tagline = ?, address = ?, phone = ?, 
         logo_url = COALESCE(?, logo_url), banner_url = COALESCE(?, banner_url),
+        maps_embed_url = COALESCE(?, maps_embed_url),
         header_receipt_note = ?, footer_receipt_note = ?,
         first_member_discount = ?, point_redeem_threshold = ?, point_redeem_discount = ?
        WHERE id = 1`,
       [
-        store_name, tagline, address, phone, 
-        logo_url || null, banner_url || null,
-        header_receipt_note, footer_receipt_note,
+        sName, sTagline, sAddress, sPhone, 
+        logo_url || null, banner_url || null, maps_embed_url || null,
+        sHeaderNote, sFooterNote,
         first_member_discount || 10000, point_redeem_threshold || 10, point_redeem_discount || 10000
       ]
     );
-    res.json({ success: true, message: 'Pengaturan toko berhasil diperbarui!' });
+
+    if (result.affectedRows === 0) {
+      await pool.query(
+        `INSERT INTO store_settings 
+          (id, store_name, tagline, address, phone, logo_url, banner_url, header_receipt_note, footer_receipt_note, first_member_discount, point_redeem_threshold, point_redeem_discount)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sName, sTagline, sAddress, sPhone,
+          logo_url || null, banner_url || null,
+          sHeaderNote, sFooterNote,
+          first_member_discount || 10000, point_redeem_threshold || 10, point_redeem_discount || 10000
+        ]
+      );
+    }
+
+    res.json({ success: true, message: 'Pengaturan toko berhasil diperbarui di database!' });
   } catch (error) {
+    console.error('API /api/settings error:', error);
     res.status(500).json({ success: false, message: 'Gagal memperbarui settings', error: error.message });
   }
 });
@@ -74,9 +113,12 @@ app.get('/api/outlets', async (req, res) => {
 });
 
 app.post('/api/outlets', async (req, res) => {
-  const { store_name, address, phone } = req.body;
+  const { store_name, address, phone, maps_embed_url } = req.body;
   try {
-    const [result] = await pool.query('INSERT INTO outlets (store_name, address, phone) VALUES (?, ?, ?)', [store_name, address, phone]);
+    const [result] = await pool.query(
+      'INSERT INTO outlets (store_name, address, phone, maps_embed_url) VALUES (?, ?, ?, ?)',
+      [store_name, address, phone, maps_embed_url || null]
+    );
     res.json({ success: true, message: 'Outlet baru berhasil ditambahkan', id: result.insertId });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal menambah outlet', error: error.message });
@@ -85,9 +127,12 @@ app.post('/api/outlets', async (req, res) => {
 
 app.put('/api/outlets/:id', async (req, res) => {
   const { id } = req.params;
-  const { store_name, address, phone } = req.body;
+  const { store_name, address, phone, maps_embed_url } = req.body;
   try {
-    await pool.query('UPDATE outlets SET store_name = ?, address = ?, phone = ? WHERE id = ?', [store_name, address, phone, id]);
+    await pool.query(
+      'UPDATE outlets SET store_name = ?, address = ?, phone = ?, maps_embed_url = ? WHERE id = ?',
+      [store_name, address, phone, maps_embed_url || null, id]
+    );
     res.json({ success: true, message: 'Outlet berhasil diperbarui!' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal update outlet', error: error.message });
@@ -107,12 +152,39 @@ app.get('/api/bank-accounts', async (req, res) => {
 });
 
 app.post('/api/bank-accounts', async (req, res) => {
-  const { bank_name, account_number, account_holder } = req.body;
+  const { bank_name, account_number, account_holder, qr_code_url } = req.body;
   try {
-    const [result] = await pool.query('INSERT INTO bank_accounts (bank_name, account_number, account_holder) VALUES (?, ?, ?)', [bank_name, account_number, account_holder]);
-    res.json({ success: true, message: 'Rekening bank berhasil ditambahkan', id: result.insertId });
+    const [result] = await pool.query(
+      'INSERT INTO bank_accounts (bank_name, account_number, account_holder, qr_code_url) VALUES (?, ?, ?, ?)',
+      [bank_name, account_number, account_holder || '-', qr_code_url || null]
+    );
+    res.json({ success: true, message: 'Rekening bank / QRIS berhasil ditambahkan', id: result.insertId });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal menambah rekening bank', error: error.message });
+  }
+});
+
+app.put('/api/bank-accounts/:id', async (req, res) => {
+  const { id } = req.params;
+  const { bank_name, account_number, account_holder, qr_code_url } = req.body;
+  try {
+    await pool.query(
+      'UPDATE bank_accounts SET bank_name = ?, account_number = ?, account_holder = ?, qr_code_url = COALESCE(?, qr_code_url) WHERE id = ?',
+      [bank_name, account_number, account_holder, qr_code_url || null, id]
+    );
+    res.json({ success: true, message: 'Rekening / QRIS berhasil diperbarui!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui rekening', error: error.message });
+  }
+});
+
+app.delete('/api/bank-accounts/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM bank_accounts WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Rekening / QRIS berhasil dihapus!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menghapus rekening', error: error.message });
   }
 });
 

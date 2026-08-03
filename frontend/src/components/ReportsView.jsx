@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { 
+  Printer,
   TrendingUp, 
   TrendingDown, 
   DollarSign, 
@@ -22,8 +23,9 @@ import {
   Search
 } from 'lucide-react';
 import { showAlertSuccess, showAlertWarning } from '../utils/swalAlert';
+import { API_BASE } from '../utils/apiConfig';
 
-export default function ReportsView({ orders = [], setOrders, expenses = [], setExpenses, customers = [], services = [] }) {
+export default function ReportsView({ orders = [], setOrders, expenses = [], setExpenses, customers = [], services = [], storeSettings = {}, receiptFontSize = '80mm', setActiveReceipt }) {
   const [reportTab, setReportTab] = useState('summary');
   const [dateFilterMode, setDateFilterMode] = useState('today'); // 'today' | 'this_month' | 'all'
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,7 +107,7 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
     setExpenses([created, ...expenses]);
 
     // Save to MySQL API
-    fetch(`http://${window.location.hostname}:5000/api/expenses`, {
+    fetch(`${API_BASE}/expenses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(created)
@@ -119,7 +121,7 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
   const handleMarkAsPaid = (orderId) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, payment_status: 'paid', paid_amount: o.total_amount } : o));
 
-    fetch(`http://${window.location.hostname}:5000/api/orders/${orderId}/payment`, {
+    fetch(`${API_BASE}/orders/${orderId}/payment`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ payment_status: 'paid' })
@@ -194,6 +196,14 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
               }`}
             >
               Pengeluaran
+            </button>
+            <button 
+              onClick={() => setReportTab('history')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1 ${
+                reportTab === 'history' ? 'bg-teal-700 text-white shadow' : 'text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Riwayat
             </button>
           </div>
         </div>
@@ -352,6 +362,14 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
                       <p className="text-xs text-slate-500">Tagihan:</p>
                       <p className="text-lg font-black text-amber-600">Rp {(Number(order.total_amount) || 0).toLocaleString('id-ID')}</p>
                     </div>
+                    {setActiveReceipt && (
+                      <button 
+                        onClick={() => setActiveReceipt(order)}
+                        className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs px-3 py-2 rounded-xl shadow transition flex items-center gap-1"
+                      >
+                        <Printer className="w-3.5 h-3.5" /> Cetak Struk
+                      </button>
+                    )}
                     <button 
                       onClick={() => handleMarkAsPaid(order.id)}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow transition flex items-center gap-1"
@@ -406,6 +424,76 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
                   <span className="text-base font-black text-red-600">
                     - Rp {(Number(exp.amount) || 0).toLocaleString('id-ID')}
                   </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. RIWAYAT TRANSAKSI DENGAN REPRINT */}
+      {reportTab === 'history' && (
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-center">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-base">Riwayat Semua Transaksi</h3>
+              <p className="text-xs text-slate-500">Jumlah: <b className="text-teal-700">{filteredOrders.length} Transaksi</b></p>
+            </div>
+            <span className="bg-teal-100 text-teal-900 font-extrabold text-xs px-3 py-1 rounded-full">
+              Total: Rp {totalOmsetKotor.toLocaleString('id-ID')}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {filteredOrders.length === 0 ? (
+              <div className="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs border">
+                Belum ada transaksi pada periode ini.
+              </div>
+            ) : (
+              filteredOrders.map((order, idx) => (
+                <div key={order.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="bg-slate-800 text-amber-300 text-xs font-black px-2 py-0.5 rounded-lg">#{idx + 1}</span>
+                        <span className="font-extrabold text-teal-800 text-sm">{order.invoice_number}</span>
+                        <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${
+                          order.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {order.payment_status === 'paid' ? 'LUNAS' : 'BELUM BAYAR'}
+                        </span>
+                      </div>
+                      <p className="font-bold text-slate-800 text-xs mt-1">{order.customer_name} {order.customer_phone ? `(${order.customer_phone})` : ''}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {order.created_at} | Bayar: <b className="uppercase">{order.payment_type}</b>
+                        {order.rack_location ? ` | Rak: ${order.rack_location}` : ''}
+                      </p>
+                      {order.items && order.items.length > 0 && (
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {order.items.map((it, i) => (
+                            <span key={i}>{i > 0 ? ', ' : ''}{it.service_name} ({it.qty} {it.unit || 'kg'})</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                      <div className="text-right">
+                        <p className="text-xs text-slate-500">Total:</p>
+                        <p className={`text-lg font-black ${order.payment_status === 'paid' ? 'text-teal-700' : 'text-amber-600'}`}>
+                          Rp {(Number(order.total_amount) || 0).toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                      {setActiveReceipt && (
+                        <button 
+                          onClick={() => setActiveReceipt(order)}
+                          className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs px-3 py-2 rounded-xl shadow transition flex items-center gap-1"
+                        >
+                          <Printer className="w-3.5 h-3.5" /> Cetak Ulang
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))
             )}

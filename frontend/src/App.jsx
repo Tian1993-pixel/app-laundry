@@ -10,7 +10,7 @@ const getApiBase = () => {
     if (host === 'ruangsistem.my.id' || host.endsWith('.my.id')) {
       return '/api';
     }
-    return `http://${host}:5000/api`;
+    return 'http://localhost:5000/api';
   }
   return 'http://localhost:5000/api';
 };

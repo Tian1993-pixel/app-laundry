@@ -103,21 +103,29 @@ export default function OutletSettingsView({
   const handleAddOutletSubmit = (e) => {
     e.preventDefault();
     if (!newOutlet.store_name || !newOutlet.phone) return showAlertWarning('Form Incomplete', 'Lengkapi nama dan telepon outlet!');
+    const tempId = Date.now();
     const created = {
-      id: Date.now(),
+      id: tempId,
       store_name: newOutlet.store_name,
       address: newOutlet.address || '-',
       phone: newOutlet.phone,
       maps_embed_url: newOutlet.maps_embed_url || null
     };
 
-    setOutlets([...outlets, created]);
+    setOutlets(prev => [...prev, created]);
 
     fetch(`${API_BASE}/outlets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(created)
-    }).catch(err => console.log('DB outlet error:', err));
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.id) {
+        setOutlets(prev => prev.map(o => o.id === tempId ? { ...o, id: data.id } : o));
+      }
+    })
+    .catch(err => console.log('DB outlet error:', err));
 
     setNewOutlet({ store_name: '', address: '', phone: '', maps_embed_url: '' });
     setShowAddOutlet(false);

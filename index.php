@@ -137,14 +137,29 @@ if (str_starts_with($relativeUri, '/api/')) {
         }
         if ($method === 'PUT') {
             $input = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("UPDATE store_settings SET store_name = ?, address = ?, phone = ?, maps_embed_url = COALESCE(?, maps_embed_url) WHERE id = 1");
+            $stmt = $pdo->prepare("UPDATE store_settings SET 
+                store_name = ?, 
+                tagline = COALESCE(?, tagline), 
+                address = ?, 
+                phone = ?, 
+                logo_url = COALESCE(?, logo_url), 
+                banner_url = COALESCE(?, banner_url), 
+                header_receipt_note = COALESCE(?, header_receipt_note), 
+                footer_receipt_note = COALESCE(?, footer_receipt_note), 
+                maps_embed_url = COALESCE(?, maps_embed_url) 
+                WHERE id = 1");
             $stmt->execute([
                 $input['store_name'] ?? 'Laundry Fresh & Clean',
+                $input['tagline'] ?? null,
                 $input['address'] ?? '',
                 $input['phone'] ?? '',
+                $input['logo_url'] ?? null,
+                $input['banner_url'] ?? null,
+                $input['header_receipt_note'] ?? null,
+                $input['footer_receipt_note'] ?? null,
                 $input['maps_embed_url'] ?? null
             ]);
-            echo json_encode(["success" => true, "message" => "Settings berhasil diupdate"]);
+            echo json_encode(["success" => true, "message" => "Settings & Logo berhasil diperbarui!"]);
             exit;
         }
     }

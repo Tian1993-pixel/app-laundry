@@ -5,9 +5,9 @@
  */
 
 // 1. Coba baca dari file backend/.env jika ada
-$envUser = 'root';
-$envPass = '';
-$envName = 'db_laundry';
+$envUser = 'ruad8174_db_laundry';
+$envPass = 'CBm3ETMPBYWT65';
+$envName = 'ruad8174_db_laundry';
 $envHost = 'localhost';
 
 $envFile = __DIR__ . '/backend/.env';

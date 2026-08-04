@@ -35,8 +35,7 @@ export default function Navbar({
     { id: 'packages', label: 'Paket Laundry', icon: Shirt },
     { id: 'calculator', label: 'Kalkulator Biaya', icon: Calculator },
     { id: 'pickup', label: 'Antar-Jemput', icon: Truck },
-    { id: 'tracking', label: 'Cek Cucian', icon: Search },
-    { id: 'member', label: 'Portal Member', icon: User }
+    { id: 'tracking', label: 'Cek Cucian', icon: Search }
   ];
 
   const handleTabClick = (tabId) => {

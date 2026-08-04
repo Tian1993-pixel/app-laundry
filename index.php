@@ -50,41 +50,41 @@ if (str_starts_with($relativeUri, '/api/')) {
         exit;
     }
 
-    $dbHost = 'localhost';
-    $dbUser = 'ruad8174_db_laundry';
-    $dbPass = '';
-    $dbName = 'ruad8174_db_laundry';
-
-    $envPath = __DIR__ . '/backend/.env';
-    if (file_exists($envPath)) {
-        $env = parse_ini_file($envPath);
-        if ($env) {
-            $dbHost = $env['DB_HOST'] ?? $dbHost;
-            $dbUser = $env['DB_USER'] ?? $dbUser;
-            $dbPass = $env['DB_PASS'] ?? $dbPass;
-            $dbName = $env['DB_NAME'] ?? $dbName;
-        }
-    }
+    // Read DB config from db_config.php or backend/.env
+    $dbCfg = file_exists(__DIR__ . '/db_config.php') ? include(__DIR__ . '/db_config.php') : [];
+    $dbHost = $dbCfg['host'] ?? 'localhost';
+    $dbUser = $dbCfg['user'] ?? 'ruad8174_db_laundry';
+    $dbPass = $dbCfg['pass'] ?? '';
+    $dbName = $dbCfg['name'] ?? 'ruad8174_db_laundry';
 
     $pdo = null;
     $possibleDBs = [
         ['host' => $dbHost, 'user' => $dbUser, 'pass' => $dbPass, 'name' => $dbName],
+        ['host' => 'localhost', 'user' => 'ruad8174_db_laundry', 'pass' => $dbPass, 'name' => 'ruad8174_db_laundry'],
         ['host' => 'localhost', 'user' => 'root', 'pass' => '', 'name' => 'db_laundry'],
         ['host' => 'localhost', 'user' => 'root', 'pass' => 'root', 'name' => 'db_laundry']
     ];
 
+    $lastErr = '';
     foreach ($possibleDBs as $cfg) {
+        if (empty($cfg['user']) || empty($cfg['name'])) continue;
         try {
             $pdo = new PDO("mysql:host={$cfg['host']};dbname={$cfg['name']};charset=utf8mb4", $cfg['user'], $cfg['pass'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
             ]);
             if ($pdo) break;
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+            $lastErr = $e->getMessage();
+        }
     }
 
     if (!$pdo) {
-        echo json_encode(["success" => false, "message" => "Database connection error"]);
+        echo json_encode([
+            "success" => false, 
+            "message" => "Database connection error: " . $lastErr,
+            "hint" => "Edit file db_config.php atau backend/.env di cPanel File Manager dengan password MySQL Rumahweb Anda."
+        ]);
         exit;
     }
 

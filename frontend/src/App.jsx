@@ -424,15 +424,16 @@ export default function App() {
     const hostname = window.location.hostname;
     
     let slug = null;
-    if (hostname.includes('.ruangsistem.my.id')) {
+    if (hostname && !hostname.startsWith('localhost') && !hostname.startsWith('127.0.0.1')) {
       const parts = hostname.split('.');
-      if (parts.length >= 4 && parts[0] !== 'www') {
-        slug = parts[0];
-      }
-    } else if (hostname.includes('.my.id')) {
-      const parts = hostname.split('.');
-      if (parts.length >= 3 && parts[0] !== 'www') {
-        slug = parts[0];
+      if (hostname.endsWith('.my.id') || hostname.endsWith('.co.id') || hostname.endsWith('.go.id')) {
+        if (parts.length >= 4 && parts[0] !== 'www') {
+          slug = parts[0];
+        }
+      } else {
+        if (parts.length >= 3 && parts[0] !== 'www') {
+          slug = parts[0];
+        }
       }
     }
 

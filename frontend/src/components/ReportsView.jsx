@@ -27,7 +27,8 @@ import { showAlertSuccess, showAlertWarning } from '../utils/swalAlert';
 import { API_BASE } from '../utils/apiConfig';
 
 export default function ReportsView({ orders = [], setOrders, expenses = [], setExpenses, customers = [], services = [], storeSettings = {}, receiptFontSize = '80mm', setActiveReceipt, currentTenant }) {
-  const [reportTab, setReportTab] = useState('main');
+  const [reportTab, setReportTab] = useState('main'); // 'main' | 'summary' | 'unpaid' | 'expenses' | 'cashbook' | 'history'
+  const [chartMetric, setChartMetric] = useState('orders'); // 'orders' | 'revenue'
   const [dateFilterMode, setDateFilterMode] = useState('today'); // 'today' | 'this_month' | 'custom' | 'all'
   
   const [startDate, setStartDate] = useState(() => {
@@ -456,61 +457,77 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
           </div>
 
           {/* Grafik Perkembangan Orderan Per Hari (Tampilan Per Minggu) */}
+          {/* Grafik Fluktuasi Harian (Grafik Batang Transaksi & Omset) */}
           <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-white p-4 sm:p-6 rounded-3xl shadow-xl border border-slate-700/60 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
               <div className="space-y-0.5">
                 <div className="inline-flex items-center gap-1.5 text-amber-400 text-xs font-black uppercase tracking-wider">
-                  <BarChart3 className="w-4 h-4 text-amber-400" /> Grafik Perkembangan Orderan Per Hari (Mingguan)
+                  <BarChart3 className="w-4 h-4 text-amber-400" /> Grafik Fluktuasi Transaksi Harian (7 Hari)
                 </div>
-                <h3 className="text-base sm:text-lg font-black text-white">Tren Transaksi 7 Hari Terakhir</h3>
+                <h3 className="text-base sm:text-lg font-black text-white">Batang Fluktuasi Perkembangan Orderan</h3>
               </div>
-              <div className="flex items-center gap-2.5 text-xs bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700 font-bold self-start sm:self-auto shadow-inner">
-                <span className="text-teal-300">Total 7 Hari: <b className="text-white">{totalWeekOrders} Order</b></span>
-                <span className="text-slate-600">|</span>
-                <span className="text-amber-300">Rp {totalWeekRevenue.toLocaleString('id-ID')}</span>
+
+              {/* Chart Metric Toggle Switcher (Orderan vs Omset Rp) */}
+              <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold self-start sm:self-auto shadow-inner">
+                <button 
+                  onClick={() => setChartMetric('orders')}
+                  className={`px-3 py-1 rounded-lg transition ${chartMetric === 'orders' ? 'bg-amber-400 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Mode Orderan (Jumlah)
+                </button>
+                <button 
+                  onClick={() => setChartMetric('revenue')}
+                  className={`px-3 py-1 rounded-lg transition ${chartMetric === 'revenue' ? 'bg-teal-500 text-white font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Mode Omset (Rp)
+                </button>
               </div>
             </div>
 
-            {/* Chart Graphic Bar Area */}
+            {/* High-Contrast Vertical Bar Chart Area */}
             <div className="pt-2">
-              <div className="h-44 sm:h-52 flex items-end justify-between gap-1.5 sm:gap-3 px-1 border-b border-slate-700/80 pb-2 relative">
+              <div className="h-48 sm:h-56 flex items-end justify-between gap-2 sm:gap-4 px-1 border-b border-slate-700/80 pb-2 relative">
                 {last7DaysData.map((item, idx) => {
-                  const heightPct = Math.max((item.orderCount / maxOrderInWeek) * 100, 12);
+                  const maxVal = chartMetric === 'orders' ? (maxOrderInWeek || 1) : (maxRevenueInWeek || 1);
+                  const currVal = chartMetric === 'orders' ? item.orderCount : item.revenue;
+                  const heightPct = Math.max((currVal / maxVal) * 100, 10);
                   const isToday = item.dateIso === todayStr;
 
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative cursor-pointer">
                       
                       {/* Tooltip Hover Overlay */}
-                      <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] p-2 rounded-xl border border-teal-500/50 shadow-2xl z-30 pointer-events-none whitespace-nowrap font-bold text-center">
-                        <p className="text-teal-300 font-extrabold">{item.dayLabel}, {item.dateDisplay}</p>
-                        <p className="text-white font-black">{item.orderCount} Order ({item.weight.toFixed(1)} Kg)</p>
-                        <p className="text-amber-300 font-bold">Rp {item.revenue.toLocaleString('id-ID')}</p>
+                      <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-950 text-white text-[11px] p-2.5 rounded-2xl border border-teal-500/50 shadow-2xl z-30 pointer-events-none whitespace-nowrap font-bold text-center">
+                        <p className="text-teal-300 font-black">{item.dayLabel}, {item.dateDisplay}</p>
+                        <p className="text-white font-extrabold">{item.orderCount} Order ({item.weight.toFixed(1)} Kg)</p>
+                        <p className="text-amber-300 font-black">Rp {item.revenue.toLocaleString('id-ID')}</p>
                       </div>
 
-                      {/* Top Value Tag */}
+                      {/* Top Numerical Badge */}
                       <span className={`text-[10px] sm:text-xs font-black ${isToday ? 'text-amber-300 scale-110' : 'text-slate-300'} group-hover:text-teal-300 transition`}>
-                        {item.orderCount}
+                        {chartMetric === 'orders' ? `${item.orderCount} Ord` : (item.revenue >= 1000 ? `${(item.revenue / 1000).toFixed(0)}k` : `Rp ${item.revenue}`)}
                       </span>
 
-                      {/* Vertical Bar */}
-                      <div className="w-full max-w-[40px] bg-slate-800/80 rounded-t-xl overflow-hidden flex items-end p-0.5 shadow-inner">
+                      {/* 3D Vertical Bar */}
+                      <div className="w-full max-w-[48px] bg-slate-800/90 rounded-t-2xl overflow-hidden flex items-end p-1 shadow-inner border border-slate-700/50 h-full">
                         <div 
                           style={{ height: `${heightPct}%` }}
-                          className={`w-full rounded-t-lg transition-all duration-500 group-hover:brightness-125 ${
+                          className={`w-full rounded-t-xl transition-all duration-500 group-hover:brightness-125 ${
                             isToday 
-                              ? 'bg-gradient-to-t from-amber-600 via-amber-500 to-amber-300 shadow-lg shadow-amber-500/40' 
-                              : 'bg-gradient-to-t from-teal-700 via-teal-500 to-cyan-400 shadow-lg shadow-teal-500/20'
+                              ? 'bg-gradient-to-t from-amber-600 via-amber-500 to-amber-300 shadow-lg shadow-amber-500/50 border-t border-amber-200' 
+                              : (chartMetric === 'revenue' 
+                                  ? 'bg-gradient-to-t from-emerald-700 via-teal-500 to-cyan-400 shadow-lg shadow-teal-500/30 border-t border-cyan-200' 
+                                  : 'bg-gradient-to-t from-teal-800 via-teal-600 to-amber-400 shadow-lg shadow-teal-500/30 border-t border-amber-200')
                           }`}
                         />
                       </div>
 
                       {/* X-Axis Day Label */}
-                      <div className="text-center pt-1">
-                        <span className={`block text-[10px] sm:text-xs font-black uppercase ${isToday ? 'text-amber-400 font-extrabold' : 'text-slate-300'}`}>
+                      <div className="text-center pt-1.5">
+                        <span className={`block text-[11px] sm:text-xs font-black uppercase ${isToday ? 'text-amber-400 font-extrabold' : 'text-slate-300'}`}>
                           {item.dayLabel}
                         </span>
-                        <span className="block text-[8px] sm:text-[10px] text-slate-400 font-mono">
+                        <span className="block text-[9px] sm:text-[10px] text-slate-400 font-mono">
                           {item.dateDisplay.split(' ')[0]}
                         </span>
                       </div>
@@ -521,17 +538,17 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
               </div>
 
               {/* Legend & Footnote */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 gap-2 text-[10px] text-slate-400 font-medium">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 gap-2 text-[11px] text-slate-400 font-medium">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block shadow-sm" /> Riwayat Harian
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="w-3 h-3 rounded-full bg-cyan-400 inline-block shadow-sm" /> Hari Lalu
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-sm" /> Hari Ini
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-sm" /> Hari Ini
                   </span>
                 </div>
                 <span className="text-slate-400 italic">
-                  * Hover/Sentuh batang grafik untuk melihat detail omset & kg harian
+                  * Klik tombol mode di atas untuk mengganti grafik antara Jumlah Order (Kg) dan Omset (Rp).
                 </span>
               </div>
             </div>

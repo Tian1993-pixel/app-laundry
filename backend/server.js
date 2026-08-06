@@ -14,6 +14,17 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Health Check Routes for cPanel Phusion Passenger Availability Verification
+app.get('/', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send('<!DOCTYPE html><html><head><title>Backend Laundry API</title></head><body><h1>🚀 Backend API Running Successfully</h1><p>Status: OK</p></body></html>');
+});
+
+app.get('/api', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send('<!DOCTYPE html><html><head><title>Backend Laundry API</title></head><body><h1>🚀 Backend API Running Successfully</h1><p>Status: OK</p></body></html>');
+});
+
 // MySQL Pool Connection
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -1113,3 +1124,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend App Laundry running on http://localhost:${PORT}`);
   console.log(`📊 Connected to MySQL Database: db_laundry`);
 });
+
+module.exports = app;

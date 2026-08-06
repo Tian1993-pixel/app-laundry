@@ -56,7 +56,8 @@ export default function PromotionalWebsite({
   onLogoutMember,
   onAddPickupOrder,
   activeTab,
-  setActiveTab
+  setActiveTab,
+  onOpenSaaSAuth
 }) {
   const [calcService, setCalcService] = useState(services[0] || null);
   const [calcQty, setCalcQty] = useState(3.0);
@@ -204,10 +205,14 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
       
       <div>
         {/* Top Announcement Bar */}
-        <div className="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 text-white text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2 shadow-sm">
+        <div className="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 text-white text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2 shadow-sm flex-wrap">
           <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
           <span><b>PROMO MEMBER BARU:</b> Diskon Langsung Rp {firstDiscountText} Transaksi Pertama & Reward 1 Kg = 1 Poin!</span>
-          <button onClick={() => setActiveTab('member')} className="underline font-bold text-amber-200 hover:text-white ml-2">Daftar Member &rarr;</button>
+          {onOpenSaaSAuth && (
+            <button onClick={onOpenSaaSAuth} className="bg-amber-400 text-teal-950 font-black px-3 py-1 rounded-full text-[11px] hover:bg-amber-300 transition shadow-sm ml-2 cursor-pointer">
+              Coba Gratis 7 Hari Toko &rarr;
+            </button>
+          )}
         </div>
 
         {/* ========================================================================= */}
@@ -251,15 +256,25 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                   <button 
                     onClick={() => setActiveTab('pickup')}
-                    className="bg-amber-400 hover:bg-amber-300 text-teal-950 font-black px-6 py-3.5 rounded-2xl shadow-xl transition flex items-center gap-2 text-xs transform hover:scale-105"
+                    className="bg-amber-400 hover:bg-amber-300 text-teal-950 font-black px-6 py-3.5 rounded-2xl shadow-xl transition flex items-center gap-2 text-xs transform hover:scale-105 cursor-pointer"
                   >
                     <Truck className="w-4.5 h-4.5" /> Pesan Antar-Jemput WA
                   </button>
+
+                  {onOpenSaaSAuth && (
+                    <button 
+                      onClick={onOpenSaaSAuth}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl transition flex items-center gap-2 text-xs transform hover:scale-105 cursor-pointer"
+                    >
+                      <Sparkles className="w-4.5 h-4.5 text-amber-300" /> Pemilik Toko: Coba Gratis 7 Hari
+                    </button>
+                  )}
+
                   <button 
                     onClick={() => setActiveTab('packages')}
-                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3.5 rounded-2xl border border-white/20 backdrop-blur-sm transition flex items-center gap-2 text-xs"
+                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3.5 rounded-2xl border border-white/20 backdrop-blur-sm transition flex items-center gap-2 text-xs cursor-pointer"
                   >
-                    <Shirt className="w-4.5 h-4.5" /> Lihat Paket Laundry
+                    <Shirt className="w-4.5 h-4.5 text-teal-300" /> Lihat Paket Laundry
                   </button>
                 </div>
 
@@ -301,6 +316,129 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
             </section>
 
             {/* QUICK FEATURES */}
+            <section className="py-10 px-4 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+                  <div className="p-3 bg-teal-50 text-teal-700 rounded-xl">
+                    <Truck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-800">Antar Jemput WA Gratis</h3>
+                    <p className="text-xs text-slate-500 mt-1">Layanan kurir cepat langsung ke lokasi rumah atau apartemen Anda.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+                  <div className="p-3 bg-amber-50 text-amber-700 rounded-xl">
+                    <Star className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-800">Parfum Premium 4 Varian</h3>
+                    <p className="text-xs text-slate-500 mt-1">Parfum grade A tahan lama, pakaian harum dan anti bau apek.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+                  <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-800">1 Mesin 1 Pelanggan</h3>
+                    <p className="text-xs text-slate-500 mt-1">Pakaian tidak dicampur dengan pelanggan lain, higienis & suci.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* SAAS PLATFORM BENEFIT SHOWCASE FOR LAUNDRY OWNERS */}
+            {onOpenSaaSAuth && (
+              <section className="py-12 px-4 max-w-5xl mx-auto bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-white rounded-3xl my-8 border border-amber-400/40 shadow-2xl space-y-8 relative overflow-hidden">
+                <div className="text-center space-y-3 relative z-10">
+                  <span className="bg-amber-400 text-teal-950 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" /> Khusus Pemilik Usaha Laundry
+                  </span>
+                  <h2 className="text-2xl sm:text-4xl font-black text-white">
+                    Miliki Aplikasi Kasir POS & Website Promosi Toko Sendiri!
+                  </h2>
+                  <p className="text-teal-200 text-xs sm:text-sm max-w-2xl mx-auto">
+                    Dapatkan sistem digital lengkap 1 paket siap pakai untuk meningkatkan omset & mengelola cabang laundry Anda.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-black">
+                      1
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">🌐 Website Promosi Toko (Subdomain/Custom)</h3>
+                    <p className="text-xs text-slate-300">
+                      Toko Anda memiliki landing page promosi sendiri. Pelanggan bisa order antar-jemput WA & cek history poin secara online.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-teal-400/20 text-teal-300 flex items-center justify-center font-black">
+                      2
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">📱 Aplikasi POS Kasir Web & Android APK</h3>
+                    <p className="text-xs text-slate-300">
+                      Sistem kasir cepat, cetak nota thermal Bluetooth, hitung sisa rak/lemari, & kelola shift kasir tanpa ribet.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-400/20 text-emerald-300 flex items-center justify-center font-black">
+                      3
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">💬 Nota Digital WhatsApp Auto-Send</h3>
+                    <p className="text-xs text-slate-300">
+                      Kirim rincian nota & status cucian siap ambil secara otomatis ke WhatsApp pelanggan dengan 1 kali klik.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-400/20 text-indigo-300 flex items-center justify-center font-black">
+                      4
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">📊 Laporan Keuangan & Laba/Rugi</h3>
+                    <p className="text-xs text-slate-300">
+                      Rekap omset harian, pengeluaran operasional, metode pembayaran (Cash/QRIS), dan analisis cabang otomatis.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-400/20 text-rose-300 flex items-center justify-center font-black">
+                      5
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">🎁 Program Poin & Diskon Member</h3>
+                    <p className="text-xs text-slate-300">
+                      Ikat loyalitas pelanggan dengan reward 1 Kg = 1 Poin, voucher diskon transaksi pertama, & klaim deposit.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-black">
+                      6
+                    </div>
+                    <h3 className="font-extrabold text-base text-white">🔒 Isolasi Data 100% Aman & Terpisah</h3>
+                    <p className="text-xs text-slate-300">
+                      Data toko, transaksi, & pelanggan tersimpan aman khusus untuk akun Anda. Tidak bisa diakses oleh owner lain.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-center pt-4 relative z-10">
+                  <button 
+                    onClick={onOpenSaaSAuth}
+                    className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm shadow-xl transition transform hover:scale-105 cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <Sparkles className="w-5 h-5" /> Mulai Coba Gratis 7 Hari Sekarang &rarr;
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* QUICK FEATURES NAVIGATORS */}
             <section className="py-10 px-4 max-w-5xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div 
@@ -1073,85 +1211,87 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION LOKASI & PETA GOOGLE MAPS OUTLET */}
+      {/* SECTION LOKASI & PETA GOOGLE MAPS OUTLET (HANYA TAMPIL DI BERANDA UTAMA) */}
       {/* ========================================================================= */}
-      <section className="bg-slate-900 text-white py-14 px-4 border-t border-slate-800">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <span className="bg-teal-900/80 text-teal-300 font-extrabold text-xs px-3.5 py-1.5 rounded-full border border-teal-700 uppercase tracking-widest inline-flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-teal-400" /> Lokasi & Peta Outlet
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Kunjungi & Temukan Outlet Terdekat Kami</h2>
-            <p className="text-xs text-slate-400 max-w-xl mx-auto">
-              Lokasi strategis, mudah dijangkau, dan siap melayani kebutuhan laundry pakaian Anda setiap hari.
-            </p>
-          </div>
+      {activeTab === 'home' && (
+        <section className="bg-slate-900 text-white py-14 px-4 border-t border-slate-800">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <div className="text-center space-y-2">
+              <span className="bg-teal-900/80 text-teal-300 font-extrabold text-xs px-3.5 py-1.5 rounded-full border border-teal-700 uppercase tracking-widest inline-flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-teal-400" /> Lokasi & Peta Outlet
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">Kunjungi & Temukan Outlet Terdekat Kami</h2>
+              <p className="text-xs text-slate-400 max-w-xl mx-auto">
+                Lokasi strategis, mudah dijangkau, dan siap melayani kebutuhan laundry pakaian Anda setiap hari.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Outlets Info Box (Lg: 4) */}
-            <div className="lg:col-span-4 bg-slate-800/90 p-6 rounded-3xl border border-slate-700 space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <h3 className="font-extrabold text-amber-300 text-base flex items-center gap-2 border-b border-slate-700 pb-3">
-                  <Building2 className="w-5 h-5 text-amber-400" /> {storeSettings.store_name}
-                </h3>
-                <div className="space-y-3 text-xs text-slate-300">
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-white mb-0.5">Alamat Utama Toko:</p>
-                      <p className="text-slate-300">{storeSettings.address || 'Jl. Raya Utama No. 12, Bandung'}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              {/* Outlets Info Box (Lg: 4) */}
+              <div className="lg:col-span-4 bg-slate-800/90 p-6 rounded-3xl border border-slate-700 space-y-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h3 className="font-extrabold text-amber-300 text-base flex items-center gap-2 border-b border-slate-700 pb-3">
+                    <Building2 className="w-5 h-5 text-amber-400" /> {storeSettings.store_name}
+                  </h3>
+                  <div className="space-y-3 text-xs text-slate-300">
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-white mb-0.5">Alamat Utama Toko:</p>
+                        <p className="text-slate-300">{storeSettings.address || 'Jl. Raya Utama No. 12, Bandung'}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <div>
-                      <p className="font-bold text-white">Hotline WhatsApp CS:</p>
-                      <p className="text-slate-300">{storeSettings.phone || '081234567890'}</p>
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold text-white">Hotline WhatsApp CS:</p>
+                        <p className="text-slate-300">{storeSettings.phone || '081234567890'}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2.5">
-                    <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <div>
-                      <p className="font-bold text-white">Jam Buka Laundry:</p>
-                      <p className="text-slate-300">Senin - Minggu: 07.00 - 21.00 WIB</p>
+                    <div className="flex items-center gap-2.5">
+                      <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold text-white">Jam Buka Laundry:</p>
+                        <p className="text-slate-300">{storeSettings.operating_hours || 'Senin - Minggu: 07:00 - 21:00 WIB'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                <div className="space-y-2 pt-4 border-t border-slate-700">
+                  <a 
+                    href={`https://maps.google.com/?q=${encodeURIComponent(storeSettings.address || storeSettings.store_name)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <MapPin className="w-4 h-4" /> Buka Di Google Maps App
+                  </a>
+                </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t border-slate-700">
-                <a 
-                  href={`https://maps.google.com/?q=${encodeURIComponent(storeSettings.address || storeSettings.store_name)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <MapPin className="w-4 h-4" /> Buka Di Google Maps App
-                </a>
+              {/* Google Maps Interactive iFrame (Lg: 8) */}
+              <div className="lg:col-span-8 bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl h-80 lg:h-auto min-h-[320px] relative">
+                <iframe 
+                  title="Google Maps Lokasi Laundry"
+                  src={
+                    storeSettings.maps_embed_url && storeSettings.maps_embed_url.includes('google.com/maps')
+                      ? (storeSettings.maps_embed_url.includes('<iframe') 
+                          ? storeSettings.maps_embed_url.match(/src="([^"]+)"/)?.[1] || storeSettings.maps_embed_url 
+                          : storeSettings.maps_embed_url)
+                      : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.898863678077!2d107.608316!3d-6.902677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTQnMDkuNiJTIDEwN8KwMzYnMjkuOSJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid'
+                  } 
+                  className="w-full h-full border-0" 
+                  allowFullScreen="" 
+                  loading="lazy" 
+                />
               </div>
-            </div>
-
-            {/* Google Maps Interactive iFrame (Lg: 8) */}
-            <div className="lg:col-span-8 bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl h-80 lg:h-auto min-h-[320px] relative">
-              <iframe 
-                title="Google Maps Lokasi Laundry"
-                src={
-                  storeSettings.maps_embed_url && storeSettings.maps_embed_url.includes('google.com/maps')
-                    ? (storeSettings.maps_embed_url.includes('<iframe') 
-                        ? storeSettings.maps_embed_url.match(/src="([^"]+)"/)?.[1] || storeSettings.maps_embed_url 
-                        : storeSettings.maps_embed_url)
-                    : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.898863678077!2d107.608316!3d-6.902677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTQnMDkuNiJTIDEwN8KwMzYnMjkuOSJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid'
-                } 
-                className="w-full h-full border-0" 
-                allowFullScreen="" 
-                loading="lazy" 
-              />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* GLOBAL FOOTER WITH SOCIAL MEDIA FOLLOW (USER REQUEST - LINK MENU DIHILANGKAN) */}
       <footer className="bg-slate-900 text-slate-400 text-xs py-10 px-4 border-t border-slate-800 mt-auto">
@@ -1169,6 +1309,9 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
               <p className="font-extrabold text-white text-base">{storeSettings.store_name}</p>
               <p className="text-slate-400 mt-0.5">{storeSettings.tagline}</p>
               <p className="text-[11px] text-teal-400 font-semibold mt-1">📍 {storeSettings.address} | 📞 {storeSettings.phone}</p>
+              <p className="text-[11px] text-amber-300 font-semibold mt-0.5 flex items-center gap-1 justify-center md:justify-start">
+                <Clock className="w-3.5 h-3.5 text-amber-400 inline" /> Jam Operasional: {storeSettings.operating_hours || 'Senin - Minggu: 07:00 - 21:00 WIB'}
+              </p>
             </div>
           </div>
 
@@ -1178,7 +1321,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
               {/* Instagram */}
               <a 
-                href="https://instagram.com" 
+                href={storeSettings.social_instagram || 'https://instagram.com'} 
                 target="_blank" 
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 text-slate-200 hover:text-white p-2.5 rounded-xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold shadow-sm"
@@ -1191,7 +1334,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
 
               {/* Facebook */}
               <a 
-                href="https://facebook.com" 
+                href={storeSettings.social_facebook || 'https://facebook.com'} 
                 target="_blank" 
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white p-2.5 rounded-xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold shadow-sm"
@@ -1204,7 +1347,7 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
 
               {/* TikTok */}
               <a 
-                href="https://tiktok.com" 
+                href={storeSettings.social_tiktok || 'https://tiktok.com'} 
                 target="_blank" 
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-slate-950 text-slate-200 hover:text-white p-2.5 rounded-xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold shadow-sm"
@@ -1217,7 +1360,13 @@ Mohon konfirmasi penjemputan cucian saya & klaim promo member. Terima kasih!`;
 
               {/* WhatsApp Hotline */}
               <a 
-                href={`https://wa.me/${targetWa}`} 
+                href={
+                  storeSettings.social_whatsapp 
+                    ? (storeSettings.social_whatsapp.startsWith('http') 
+                        ? storeSettings.social_whatsapp 
+                        : `https://wa.me/${storeSettings.social_whatsapp.replace(/[^0-9]/g, '')}`) 
+                    : `https://wa.me/${targetWa}`
+                } 
                 target="_blank" 
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white p-2.5 rounded-xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold shadow-sm"

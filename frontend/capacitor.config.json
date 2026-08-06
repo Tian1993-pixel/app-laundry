@@ -1,0 +1,9 @@
+{
+  "appId": "com.applaundry.pos",
+  "appName": "App Laundry POS",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  }
+}

@@ -22,6 +22,9 @@ export default function Navbar({
   storeSettings, 
   loggedInMember, 
   onLogoutMember,
+  loggedInStaff,
+  onLogoutStaff,
+  onOpenStaffLogin,
   activeWebsiteTab,
   setActiveWebsiteTab
 }) {
@@ -42,6 +45,14 @@ export default function Navbar({
     setActiveMode('promotional');
     if (setActiveWebsiteTab) setActiveWebsiteTab(tabId);
     setIsMobileSidebarOpen(false);
+  };
+
+  const handleSwitchToPos = () => {
+    if (!loggedInStaff) {
+      onOpenStaffLogin();
+    } else {
+      setActiveMode('admin');
+    }
   };
 
   return (
@@ -89,7 +100,7 @@ export default function Navbar({
                   <button
                     key={item.id}
                     onClick={() => handleTabClick(item.id)}
-                    className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 ${
+                    className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                       isActive 
                         ? 'bg-amber-400 text-teal-950 shadow-md font-extrabold transform scale-105' 
                         : 'text-teal-100 hover:text-white hover:bg-teal-800/70'
@@ -103,48 +114,28 @@ export default function Navbar({
             </div>
           )}
 
-          {/* Right Mode Switcher & Member Profile */}
+          {/* Right Staff/Member Actions (Single Member Portal Access) */}
           <div className="flex items-center gap-2.5 shrink-0">
-            {/* Mode Switcher */}
-            <div className="flex items-center bg-teal-950/80 p-1 rounded-xl border border-teal-800/80">
-              <button 
-                onClick={() => setActiveMode('promotional')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
-                  activeMode === 'promotional' 
-                    ? 'bg-amber-400 text-teal-950 shadow-sm' 
-                    : 'text-teal-200 hover:text-white'
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Website</span>
-              </button>
-
-              <button 
-                onClick={() => setActiveMode('admin')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
-                  activeMode === 'admin' 
-                    ? 'bg-teal-700 text-white shadow-sm' 
-                    : 'text-teal-200 hover:text-white'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Kasir (HP)</span>
-              </button>
-            </div>
-
-            {/* Member Profile Badge */}
             {loggedInMember ? (
-              <div className="flex items-center gap-2 bg-teal-800 border border-teal-700 px-3 py-1.5 rounded-xl text-xs shadow-sm">
-                <div className="text-right hidden sm:block">
-                  <p className="font-extrabold text-white text-xs">{loggedInMember.name}</p>
-                  <p className="text-[10px] text-amber-300 font-bold flex items-center gap-1 justify-end">
-                    <Star className="w-3 h-3 fill-amber-300" /> {loggedInMember.points} Poin
-                  </p>
-                </div>
+              <div className="flex items-center gap-1 bg-teal-950/80 border border-amber-400/70 p-1 pl-3 rounded-2xl text-xs shadow-md">
+                <button 
+                  onClick={() => handleTabClick('member')}
+                  className="text-right cursor-pointer flex items-center gap-2 pr-1 hover:opacity-90 transition group"
+                  title="Lihat Riwayat Cucian & Poin Reward Anda"
+                >
+                  <div>
+                    <p className="font-extrabold text-white text-xs group-hover:text-amber-300 transition flex items-center gap-1 justify-end">
+                      <span>👤 {loggedInMember.name}</span>
+                    </p>
+                    <p className="text-[10px] text-amber-300 font-black flex items-center gap-1 justify-end">
+                      <Star className="w-3 h-3 fill-amber-300 text-amber-300" /> {loggedInMember.points} Poin (Riwayat)
+                    </p>
+                  </div>
+                </button>
                 <button 
                   onClick={onLogoutMember} 
-                  title="Logout Member"
-                  className="p-1 text-teal-200 hover:text-red-300 transition"
+                  title="Keluar / Logout Member"
+                  className="p-1.5 text-teal-200 hover:text-red-300 hover:bg-teal-800/80 rounded-xl transition cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -152,12 +143,29 @@ export default function Navbar({
             ) : (
               <button
                 onClick={() => handleTabClick('member')}
-                className="bg-amber-400 hover:bg-amber-300 text-teal-950 font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm"
+                className={`font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                  activeWebsiteTab === 'member'
+                    ? 'bg-amber-400 text-teal-950 ring-2 ring-amber-300'
+                    : 'bg-amber-400 hover:bg-amber-300 text-teal-950'
+                }`}
+                title="Masuk / Daftar Portal Member Pelanggan"
               >
                 <User className="w-4 h-4" />
                 <span className="hidden sm:inline">Portal Member</span>
               </button>
             )}
+
+            {/* Subtle Direct POS Access Button for Staff/Owner */}
+            <button 
+              onClick={handleSwitchToPos}
+              className="bg-teal-950/60 hover:bg-teal-800 text-teal-100 border border-teal-700/80 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              title="Akses Sistem POS Kasir & Owner"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden lg:inline text-[11px]">
+                {loggedInStaff ? `POS (${loggedInStaff.role === 'admin' ? 'Owner' : 'Kasir'})` : 'Akses POS'}
+              </span>
+            </button>
           </div>
 
         </div>
@@ -203,11 +211,17 @@ export default function Navbar({
 
               {/* Logged in member badge inside sidebar */}
               {loggedInMember && (
-                <div className="bg-teal-800/80 p-3 rounded-2xl border border-teal-700 space-y-1">
-                  <p className="text-xs font-black text-amber-300">Member: {loggedInMember.name}</p>
+                <div 
+                  onClick={() => handleTabClick('member')}
+                  className="bg-teal-800/90 hover:bg-teal-700 p-3 rounded-2xl border border-amber-400/60 space-y-1 cursor-pointer transition shadow-md group"
+                >
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs font-black text-amber-300">Member: {loggedInMember.name}</p>
+                    <span className="text-[10px] bg-amber-400 text-teal-950 font-black px-2 py-0.5 rounded-full">Lihat Riwayat &rarr;</span>
+                  </div>
                   <p className="text-[11px] text-teal-200">No HP: {loggedInMember.phone}</p>
-                  <p className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" /> Saldo Poin: {loggedInMember.points} Poin
+                  <p className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Saldo Poin: {loggedInMember.points} Poin
                   </p>
                 </div>
               )}

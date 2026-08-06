@@ -13,18 +13,91 @@
 }
 
 @media print {
-body * {
-visibility: hidden;
-}
-#printable-receipt, #printable-receipt * {
-visibility: visible;
-}
-#printable-receipt {
-position: absolute;
-left: 0;
-top: 0;
-width: 80mm;
-margin: 0 auto;
-font-size: 12px;
-}
+  @page {
+    size: auto;
+    margin: 0mm !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #printable-receipt, #printable-receipt * {
+    visibility: visible !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-receipt {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 48mm !important;
+    max-width: 48mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-family: Consolas, 'Courier New', monospace, sans-serif !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: -0.3px !important;
+    box-sizing: border-box !important;
+    z-index: 999999 !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  #printable-receipt.thermal-80mm {
+    width: 72mm !important;
+    max-width: 72mm !important;
+    font-size: 13px !important;
+  }
+
+  #printable-receipt.thermal-58mm {
+    width: 48mm !important;
+    max-width: 48mm !important;
+    font-size: 11.5px !important;
+  }
+
+  #printable-receipt div {
+    box-sizing: border-box !important;
+    color: #000000 !important;
+  }
+
+  #printable-receipt span,
+  #printable-receipt div,
+  #printable-receipt p {
+    color: #000000 !important;
+  }
+
+  #printable-receipt div[style*="display: flex"],
+  #printable-receipt div[style*="display:flex"],
+  #printable-receipt div[style*="display: flex;"],
+  #printable-receipt div[style*="display:flex;"] {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+
+  #printable-receipt img {
+    max-width: 100% !important;
+    height: auto !important;
+    filter: contrast(160%) brightness(85%) !important;
+  }
 }

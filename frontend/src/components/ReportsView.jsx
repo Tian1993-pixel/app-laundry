@@ -638,15 +638,23 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
 
       {/* 2. SUB-VIEW DETAILS (JIKA MEMILIH SUB-MENU LAPORAN) */}
       {reportTab && reportTab !== 'main' && (
-        <div className="space-y-5">
+        <div className="space-y-5 animate-fadeIn">
           
-          {/* Top Navigation Header */}
+          {/* Top Navigation Header with Kembali Button */}
           <div className="bg-white p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
-              {reportTab === 'summary' && <span>📈 Ringkasan Laba / Rugi</span>}
-              {reportTab === 'unpaid' && <span>⏳ Laporan Tagihan Piutang ({unpaidOrders.length})</span>}
-              {reportTab === 'expenses' && <span>💸 Laporan Pengeluaran Operasional</span>}
-            </h2>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setReportTab('main')}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-sm border border-slate-200"
+              >
+                &larr; Kembali ke Menu Laporan
+              </button>
+              <h2 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
+                {reportTab === 'summary' && <span>📈 Ringkasan Laba / Rugi</span>}
+                {reportTab === 'unpaid' && <span>⏳ Laporan Tagihan Piutang ({unpaidOrders.length})</span>}
+                {reportTab === 'expenses' && <span>💸 Laporan Pengeluaran Operasional</span>}
+              </h2>
+            </div>
 
             {/* Filter Periode & Subtab Buttons */}
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">

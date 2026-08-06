@@ -418,6 +418,38 @@ export default function App() {
     }
   }, [outlets, activeOutletId, loggedInStaff]);
 
+  // Dynamic Subdomain Resolution (e.g. cuci.ruangsistem.my.id -> Tenant #7)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hostname = window.location.hostname;
+    
+    let slug = null;
+    if (hostname.includes('.ruangsistem.my.id')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 4 && parts[0] !== 'www') {
+        slug = parts[0];
+      }
+    } else if (hostname.includes('.my.id')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 3 && parts[0] !== 'www') {
+        slug = parts[0];
+      }
+    }
+
+    if (slug) {
+      fetch(`${API_BASE}/saas/resolve-tenant?slug=${encodeURIComponent(slug)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && data.tenant && data.tenant.id) {
+            const tenantObj = { id: data.tenant.id, store_name: data.tenant.store_name, domain_slug: data.tenant.domain_slug };
+            setCurrentTenant(tenantObj);
+            try { localStorage.setItem('saas_current_tenant', JSON.stringify(tenantObj)); } catch (e) {}
+          }
+        })
+        .catch(err => console.log('Subdomain resolve error:', err));
+    }
+  }, []);
+
   // Auto-sync currentTenant state from loggedInStaff if currentTenant is null/outdated
   useEffect(() => {
     if (loggedInStaff && loggedInStaff.tenant_id && (!currentTenant || currentTenant.id !== loggedInStaff.tenant_id)) {

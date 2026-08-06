@@ -234,6 +234,27 @@ export default function ReportsView({ orders = [], setOrders, expenses = [], set
   const labaBersih = totalOmsetLunas - totalPengeluaran;
   const netProfit = labaBersih;
 
+  // Breakdown Payment Types (Tunai, QRIS, Transfer, Deposit)
+  const cashOmset = paidOrders.filter(o => {
+    const t = (o.payment_type || 'cash').toLowerCase();
+    return t === 'cash' || t === 'tunai' || t === 'cash_tunai';
+  }).reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+
+  const qrisOmset = paidOrders.filter(o => {
+    const t = (o.payment_type || '').toLowerCase();
+    return t === 'qris';
+  }).reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+
+  const transferOmset = paidOrders.filter(o => {
+    const t = (o.payment_type || '').toLowerCase();
+    return t === 'transfer' || t === 'bank' || t === 'transfer_bank';
+  }).reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+
+  const depositOmset = paidOrders.filter(o => {
+    const t = (o.payment_type || '').toLowerCase();
+    return t === 'deposit' || t === 'saldo' || t === 'member_deposit';
+  }).reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+
   // Breakdown Today Metrics (Hari Ini)
   const todayOrders = orders.filter(o => isDateMatch(o.created_at, 'today'));
   const todayPaidOrders = todayOrders.filter(o => isPaidStatus(o.payment_status));
